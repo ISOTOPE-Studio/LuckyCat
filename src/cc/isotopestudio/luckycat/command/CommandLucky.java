@@ -38,7 +38,7 @@ public class CommandLucky implements CommandExecutor {
             if (args[0].equalsIgnoreCase("setlot")) {
                 ItemStack item = player.getItemInHand();
                 if (item == null) {
-                    player.sendMessage(S.toPrefixRed("你手中没用东西(╯▔皿▔)╯"));
+                    player.sendMessage(S.toPrefixRed("你手中没有东西(╯▔皿▔)╯"));
                     return true;
                 }
                 if (item.getAmount() != 1) {
@@ -84,7 +84,19 @@ public class CommandLucky implements CommandExecutor {
                 return true;
             }
             if (args[0].equalsIgnoreCase("list")) {
-
+                player.sendMessage(S.toPrefixYellow("奖品列表"));
+                for (int i = 0; i < LuckySettings.awardList.size(); i++) {
+                    ItemStack item = LuckySettings.awardList.get(i);
+                    String name = null;
+                    if (item.hasItemMeta() && item.getItemMeta().hasDisplayName()) {
+                        name = item.getItemMeta().getDisplayName();
+                    }
+                    player.sendMessage(S.toPrefixGray("[" + i + "] ") +
+                            S.toGreen(item.getType().name()) +
+                            (name == null ? "" : " (" + name + ")") +
+                            S.toGold(" x" + item.getAmount())
+                    );
+                }
                 return true;
             }
             player.sendMessage(S.toPrefixRed("未知命令, 输入 /" + label + " 查看帮助"));
