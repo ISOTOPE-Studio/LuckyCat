@@ -1,0 +1,12 @@
+name: LuckyCat
+main: cc.isotopestudio.luckycat.LuckyCat
+
+author: Mars
+description: LuckyCat
+website: http://isotopestudio.cc
+version: 1.0.0
+
+commands:
+  lucky:
+    description: LuckyCat command
+    usage: /<command> - Get Information
