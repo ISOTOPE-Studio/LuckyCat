@@ -29,7 +29,7 @@ public class CommandLucky implements CommandExecutor {
             if (args.length < 1) {
                 player.sendMessage(S.toPrefixGreen("帮助菜单"));
                 player.sendMessage(S.toYellow("/" + label + " setlot - 设置手中的物品为抽奖卷"));
-                player.sendMessage(S.toYellow("/" + label + " add - 添加手中的物品为奖品"));
+                player.sendMessage(S.toYellow("/" + label + " add <幸运值> - 添加手中的物品为奖品"));
                 player.sendMessage(S.toYellow("/" + label + " remove <ID> - 删除一个奖品(列表中的ID)"));
                 player.sendMessage(S.toYellow("/" + label + " removeall - 删除所有奖品"));
                 player.sendMessage(S.toYellow("/" + label + " list - 查看奖品列表"));
@@ -50,12 +50,27 @@ public class CommandLucky implements CommandExecutor {
                 return true;
             }
             if (args[0].equalsIgnoreCase("add")) {
+                if (args.length < 2) {
+                    player.sendMessage(S.toYellow("/" + label + " add <幸运值> - 添加手中的物品为奖品"));
+                    return true;
+                }
                 ItemStack item = player.getItemInHand();
                 if (item == null) {
                     player.sendMessage(S.toPrefixRed("你手中没有东西(╯▔皿▔)╯"));
                     return true;
                 }
-                LuckySettings.addItem(item);
+                int luck;
+                try {
+                    luck = Integer.parseInt(args[1]);
+                } catch (Exception e) {
+                    player.sendMessage(S.toPrefixRed("数字不对"));
+                    return true;
+                }
+                if (luck < 0) {
+                    player.sendMessage(S.toPrefixRed("数字不对"));
+                    return true;
+                }
+                LuckySettings.addItem(item, luck);
                 player.sendMessage(S.toPrefixGreen("成功设置"));
                 return true;
             }

@@ -7,14 +7,20 @@ package cc.isotopestudio.luckycat.gui;
 import cc.isotopestudio.luckycat.settings.LuckySettings;
 import cc.isotopestudio.luckycat.util.S;
 import org.bukkit.*;
+import org.bukkit.entity.EntityType;
+import org.bukkit.entity.Firework;
 import org.bukkit.entity.Player;
-import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.FireworkMeta;
 import org.bukkit.scheduler.BukkitRunnable;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+
 import static cc.isotopestudio.luckycat.LuckyCat.plugin;
+import static cc.isotopestudio.luckycat.settings.LuckySettings.awardList;
 
 public class LuckyGUI extends GUI implements Listener {
 
@@ -29,7 +35,7 @@ public class LuckyGUI extends GUI implements Listener {
             if (i < 9 || i > 17) {
                 setOption(i, greenGlass);
             } else {
-                setOption(i, LuckySettings.awardList.get(i % 9));
+                setOption(i, awardList.get(i % 9));
             }
         }
         setOption(4, redGlass);
@@ -38,23 +44,72 @@ public class LuckyGUI extends GUI implements Listener {
 
     private int displacement = 0;
     private int count = 0;
+    private int key;
 
     @Override
     public void open(Player player) {
         super.open(player);
+        Set<ItemStack> playerRewards = LuckySettings.getPlayerRewards(player);
+        if (playerRewards.containsAll(awardList)) {
+            player.sendMessage(S.toPrefixRed("你有所有奖品了"));
+            player.closeInventory();
+            return;
+        }
+        List<ItemStack> rewardsList = new ArrayList<>(awardList);
+        List<Integer> luckList = new ArrayList<>(LuckySettings.luckList);
+
+        int i = 0;
+        while (i < rewardsList.size()) {
+            if (playerRewards.contains(rewardsList.get(i))) {
+                rewardsList.remove(i);
+                luckList.remove(i);
+            } else {
+                i++;
+            }
+        }
+        double sum = 0;
+        double[] luckAcc = new double[luckList.size()];
+        for (i = 0; i < luckList.size(); i++) {
+            luckAcc[i] = sum + 1.0 / luckList.get(i);
+            sum += luckAcc[i];
+        }
+        sum = luckAcc[luckList.size() - 1];
+//        luckAcc[luckList.size()] = sum;
+        double point = random(sum);
+        i = 0;
+        while (true) {
+            if (luckAcc[i] < point) {
+                i++;
+                continue;
+            }
+            break;
+        }
+        for (int j = 0; j < awardList.size(); j++) {
+            if (awardList.get(j).equals(rewardsList.get(i))) {
+                key = j + 9 * 6 - 4;
+            }
+        }
         displaceItem();
     }
 
     private boolean stop = false;
 
     private void displaceItem() {
+        System.out.println(name + " " + count);
         displacement++;
         displacement %= 9;
         count++;
+        if (count < 25 && count % 5 == 0)
+            player.playSound(player.getLocation(), Sound.CLICK, 1, 2);
+        else if (count > 25 && count % 2 == 0)
+            player.playSound(player.getLocation(), Sound.CLICK, 2, 3);
+        else if (count > 40)
+            player.playSound(player.getLocation(), Sound.CLICK, 4, 4);
+
         for (int i = 9; i < 18; i++) {
-            inventory.setItem(i, LuckySettings.awardList.get((i + displacement) % 9));
+            inventory.setItem(i, awardList.get((i + displacement) % 9));
         }
-        if (count > 50 + Math.random() * 10) {
+        if (count == key) {
             win(inventory.getItem(13));
             return;
         }
@@ -63,12 +118,11 @@ public class LuckyGUI extends GUI implements Listener {
                 @Override
                 public void run() {
                     displaceItem();
-                    System.out.println(name + " " + displacement);
                 }
             }.runTaskLater(plugin, 2);
     }
 
-    int winCount = 0;
+    private int winCount = 0;
 
     private void win(ItemStack item) {
         winCount++;
@@ -88,28 +142,48 @@ public class LuckyGUI extends GUI implements Listener {
                 }
             }
         }
-        if (winCount > 20) {
+        if (winCount > 20 && !stop) {
             new BukkitRunnable() {
                 @Override
                 public void run() {
                     player.getInventory().addItem(item);
                     player.closeInventory();
-                    player.playEffect(player.getLocation(), Effect.FIREWORKS_SPARK, FireworkEffect.builder().trail(true));
+                    Firework fireWork = (Firework) player.getWorld().spawnEntity(player.getLocation(), EntityType.FIREWORK);
+                    FireworkMeta fwMeta = fireWork.getFireworkMeta();
+
+                    fwMeta.addEffect(FireworkEffect.builder().flicker(false).trail(true).with(FireworkEffect.Type.BALL).with(FireworkEffect.Type.BALL_LARGE).with(FireworkEffect.Type.STAR).withColor(Color.ORANGE).withColor(Color.YELLOW).withFade(Color.PURPLE).withFade(Color.RED).build());
+
+                    fireWork.setFireworkMeta(fwMeta);
                     player.playSound(player.getLocation(), Sound.FIREWORK_TWINKLE, 2, 1);
+                    player.playSound(player.getLocation(), Sound.LEVEL_UP, 2, 1);
+
+                    ItemStack itemInHand = player.getItemInHand();
+                    if (!itemInHand.equals(LuckySettings.lot)) {
+
+                    } else if (itemInHand.getAmount() == 1)
+                        player.setItemInHand(null);
+                    else
+                        itemInHand.setAmount(item.getAmount() - 1);
+                    LuckySettings.addPlayerReward(player, item);
                 }
             }.runTaskLater(plugin, 10);
             return;
         }
-        new BukkitRunnable() {
-            @Override
-            public void run() {
-                win(item);
-            }
-        }.runTaskLater(plugin, 2);
+        if (!stop)
+            new BukkitRunnable() {
+                @Override
+                public void run() {
+                    win(item);
+                }
+            }.runTaskLater(plugin, 2);
     }
 
     void Destory() {
         super.Destory();
         stop = true;
+    }
+
+    private static double random(double max) {
+        return Math.random() * max;
     }
 }

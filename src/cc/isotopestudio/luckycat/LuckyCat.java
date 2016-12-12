@@ -17,12 +17,14 @@ public class LuckyCat extends JavaPlugin {
     public static LuckyCat plugin;
 
     public static PluginFile config;
+    public static PluginFile playerData;
 
     @Override
     public void onEnable() {
         plugin = this;
 
         config = new PluginFile(this, "config.yml");
+        playerData = new PluginFile(this, "playerData.yml");
 
         this.getCommand("lucky").setExecutor(new CommandLucky());
 

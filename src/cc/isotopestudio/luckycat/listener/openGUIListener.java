@@ -17,6 +17,7 @@ import static org.bukkit.event.block.Action.RIGHT_CLICK_AIR;
 import static org.bukkit.event.block.Action.RIGHT_CLICK_BLOCK;
 
 public class openGUIListener implements Listener {
+
     @EventHandler
     public void onRightClick(PlayerInteractEvent event) {
         if (!(event.getAction() == RIGHT_CLICK_AIR || event.getAction() == RIGHT_CLICK_BLOCK)) {
@@ -27,6 +28,7 @@ public class openGUIListener implements Listener {
         if (itemInHand == null || itemInHand.getType() == Material.AIR) {
             return;
         }
+        itemInHand = itemInHand.clone();
         itemInHand.setAmount(1);
         if (!itemInHand.equals(LuckySettings.lot)) {
             return;
@@ -34,4 +36,5 @@ public class openGUIListener implements Listener {
         event.setCancelled(true);
         new LuckyGUI(player).open(player);
     }
+
 }

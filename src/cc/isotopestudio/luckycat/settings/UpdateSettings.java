@@ -22,9 +22,11 @@ public class UpdateSettings extends BukkitRunnable {
             LuckySettings.lot = lot;
         ConfigurationSection awardsSection = config.getConfigurationSection("awards");
         LuckySettings.awardList.clear();
+        LuckySettings.luckList.clear();
         if (awardsSection != null) {
             for (String key : awardsSection.getKeys(false)) {
-                LuckySettings.awardList.add(awardsSection.getItemStack(key));
+                LuckySettings.awardList.add(awardsSection.getItemStack(key + ".item"));
+                LuckySettings.luckList.add(awardsSection.getInt(key + ".luck"));
             }
         }
         blackGlass.getItemMeta().setDisplayName(" ");
