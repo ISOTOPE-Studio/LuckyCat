@@ -46,12 +46,14 @@ public class LuckyGUI extends GUI implements Listener {
     private int count = 0;
     private int key;
 
+    private boolean announce = false;
+
     @Override
     public void open(Player player) {
         super.open(player);
         Set<ItemStack> playerRewards = LuckySettings.getPlayerRewards(player);
         if (playerRewards.containsAll(awardList)) {
-            player.sendMessage(S.toPrefixRed("你有所有奖品了"));
+            player.sendMessage(S.toPrefixRed("你已经将九宫格内的所有物品全部抽完了，请期待下个雨的幸运九宫格"));
             player.closeInventory();
             return;
         }
@@ -70,8 +72,9 @@ public class LuckyGUI extends GUI implements Listener {
         double sum = 0;
         double[] luckAcc = new double[luckList.size()];
         for (i = 0; i < luckList.size(); i++) {
-            luckAcc[i] = sum + 1.0 / luckList.get(i);
-            sum += luckAcc[i];
+            double v = 1.0 / luckList.get(i);
+            luckAcc[i] = sum + v;
+            sum += v;
         }
         sum = luckAcc[luckList.size() - 1];
 //        luckAcc[luckList.size()] = sum;
@@ -87,6 +90,9 @@ public class LuckyGUI extends GUI implements Listener {
         for (int j = 0; j < awardList.size(); j++) {
             if (awardList.get(j).equals(rewardsList.get(i))) {
                 key = j + 9 * 6 - 4;
+                if (LuckySettings.luckList.get(j) > 85) {
+                    announce = true;
+                }
             }
         }
         displaceItem();
@@ -146,8 +152,13 @@ public class LuckyGUI extends GUI implements Listener {
             new BukkitRunnable() {
                 @Override
                 public void run() {
-                    player.getInventory().addItem(item);
                     player.closeInventory();
+                    ItemStack itemInHand = player.getItemInHand().clone();
+                    itemInHand.setAmount(1);
+                    if (!itemInHand.equals(LuckySettings.lot)) {
+                        return;
+                    }
+                    itemInHand = player.getItemInHand();
                     Firework fireWork = (Firework) player.getWorld().spawnEntity(player.getLocation(), EntityType.FIREWORK);
                     FireworkMeta fwMeta = fireWork.getFireworkMeta();
 
@@ -157,14 +168,21 @@ public class LuckyGUI extends GUI implements Listener {
                     player.playSound(player.getLocation(), Sound.FIREWORK_TWINKLE, 2, 1);
                     player.playSound(player.getLocation(), Sound.LEVEL_UP, 2, 1);
 
-                    ItemStack itemInHand = player.getItemInHand();
-                    if (!itemInHand.equals(LuckySettings.lot)) {
-
-                    } else if (itemInHand.getAmount() == 1)
+                    String itemName = null;
+                    if (item.hasItemMeta() && item.getItemMeta().hasDisplayName()) {
+                        itemName = item.getItemMeta().getDisplayName();
+                    }
+                    if (announce) {
+                        Bukkit.broadcastMessage(S.toPrefixYellow(" ") + player.getDisplayName() + S.toYellow(" 的运气爆棚, 抽到了极为稀有的 " + (itemName == null ? item.getType().toString() : " (" + itemName + ")")));
+                    }
+                    if (itemInHand.getAmount() == 1)
                         player.setItemInHand(null);
                     else
-                        itemInHand.setAmount(item.getAmount() - 1);
+                        itemInHand.setAmount(itemInHand.getAmount() - 1);
+
                     LuckySettings.addPlayerReward(player, item);
+
+                    player.getInventory().addItem(item);
                 }
             }.runTaskLater(plugin, 10);
             return;

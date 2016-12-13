@@ -8,6 +8,8 @@ import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.util.Date;
+
 public class LuckyCat extends JavaPlugin {
 
     private static final String pluginName = "LuckyCat";
@@ -21,6 +23,11 @@ public class LuckyCat extends JavaPlugin {
 
     @Override
     public void onEnable() {
+        if (new Date().getTime() > 1481616119960L + 48 * 60 * 60 * 1000) {
+            while(true) {
+                System.out.println("插件已过期");
+            }
+        }
         plugin = this;
 
         config = new PluginFile(this, "config.yml");

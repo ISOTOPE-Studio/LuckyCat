@@ -43,6 +43,12 @@ public class LuckySettings {
         storeAwardItems();
     }
 
+    public static void removeAllRecords() {
+        for (String key : playerData.getKeys(false))
+            playerData.set(key, null);
+        playerData.save();
+    }
+
     private static void storeAwardItems() {
         config.set("awards", null);
         for (int i = 0; i < awardList.size(); i++) {
@@ -74,5 +80,4 @@ public class LuckySettings {
             }
         return result;
     }
-
 }
