@@ -32,14 +32,12 @@ public class LuckyGUI extends GUI implements Listener {
     public LuckyGUI(Player player) {
         super(S.toBoldDarkGreen("抽奖机") + player.getName(), 27, player);
         for (int i = 0; i < 27; i++) {
-            if (i < 9 || i > 17) {
-                setOption(i, greenGlass);
+            if (i % 9 < 3 || i % 9 > 5) {
+                setOption(i, blackGlass);
             } else {
-                setOption(i, awardList.get(i % 9));
+                setOption(i, awardList.get((i / 9) * 3 + (i % 9 - 3)));
             }
         }
-        setOption(4, redGlass);
-        setOption(22, redGlass);
     }
 
     private int displacement = 0;
@@ -95,10 +93,13 @@ public class LuckyGUI extends GUI implements Listener {
                 }
             }
         }
+        newList = new ArrayList<>(awardList);
         displaceItem();
     }
 
     private boolean stop = false;
+
+    private List<ItemStack> newList;
 
     private void displaceItem() {
         System.out.println(name + " " + count);
@@ -111,9 +112,12 @@ public class LuckyGUI extends GUI implements Listener {
             player.playSound(player.getLocation(), Sound.CLICK, 2, 3);
         else if (count > 40)
             player.playSound(player.getLocation(), Sound.CLICK, 4, 4);
+        newList.add(newList.remove(0));
 
-        for (int i = 9; i < 18; i++) {
-            inventory.setItem(i, awardList.get((i + displacement) % 9));
+        for (int i = 0; i < 27; i++) {
+            if (i % 9 >= 3 && i % 9 <= 5) {
+                inventory.setItem(i, newList.get((i / 9) * 3 + (i % 9 - 3)));
+            }
         }
         if (count == key) {
             win(inventory.getItem(13));
@@ -134,7 +138,7 @@ public class LuckyGUI extends GUI implements Listener {
         winCount++;
         player.playSound(player.getLocation(), Sound.ORB_PICKUP, 2, 2);
         for (int i = 0; i < 27; i++) {
-            if (i < 9 || i > 17) {
+            if (i % 9 < 3 || i % 9 > 5) {
                 if (winCount % 2 == 0) {
                     if (i % 2 == 0)
                         inventory.setItem(i, greenGlass);

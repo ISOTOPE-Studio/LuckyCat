@@ -6,6 +6,7 @@ package cc.isotopestudio.luckycat.listener;
 
 import cc.isotopestudio.luckycat.gui.LuckyGUI;
 import cc.isotopestudio.luckycat.settings.LuckySettings;
+import cc.isotopestudio.luckycat.util.S;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -34,7 +35,10 @@ public class openGUIListener implements Listener {
             return;
         }
         event.setCancelled(true);
-        new LuckyGUI(player).open(player);
+        if (LuckySettings.awardList.size() != 9)
+            player.sendMessage(S.toPrefixRed("幸运九宫格没有设置好, 请联系管理员"));
+        else
+            new LuckyGUI(player).open(player);
     }
 
 }

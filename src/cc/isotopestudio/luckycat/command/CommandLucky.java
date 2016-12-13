@@ -55,6 +55,10 @@ public class CommandLucky implements CommandExecutor {
                     player.sendMessage(S.toYellow("/" + label + " add <幸运值> - 添加手中的物品为奖品"));
                     return true;
                 }
+                if (LuckySettings.awardList.size() >= 9) {
+                    player.sendMessage(S.toPrefixRed("奖品已经有9个了"));
+                    return true;
+                }
                 ItemStack item = player.getItemInHand();
                 if (item == null) {
                     player.sendMessage(S.toPrefixRed("你手中没有东西(╯▔皿▔)╯"));
@@ -73,6 +77,9 @@ public class CommandLucky implements CommandExecutor {
                 }
                 LuckySettings.addItem(item, luck);
                 player.sendMessage(S.toPrefixGreen("成功设置"));
+                if (LuckySettings.awardList.size() < 9) {
+                    player.sendMessage(S.toPrefixYellow("请继续添加奖品"));
+                }
                 return true;
             }
             if (args[0].equalsIgnoreCase("remove")) {
